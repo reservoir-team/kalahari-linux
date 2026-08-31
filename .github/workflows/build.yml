@@ -1,0 +1,35 @@
+name: Build Kalahari Linux
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip git meson ninja-build \
+            xz-utils cpio unzip rsync wget curl
+
+      - name: Install xbstrap
+        run: pip install --user xbstrap
+
+      - name: Clone bootstrap-managarm
+        run: git clone https://github.com/managarm/bootstrap-managarm.git build
+
+      - name: Download Managarm buildenv
+        working-directory: build
+        run: |
+          curl https://repos.managarm.org/buildenv/managarm-buildenv.tar.gz -o managarm-rootfs.tar.gz
+          tar xvf managarm-rootfs.tar.gz
+
+      - name: Show bootstrap-managarm contents
+        working-directory: build
+        run: ls -la
