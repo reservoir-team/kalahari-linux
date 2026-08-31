@@ -63,3 +63,8 @@ jobs:
         working-directory: build
         run: PATH="$HOME/.local/bin:$PATH" xbstrap install-tool --all
         timeout-minutes: 300
+
+      - name: xbstrap install core packages (kernel, mlibc)
+        working-directory: build
+        run: PATH="$HOME/.local/bin:$PATH" xbstrap install --all managarm-kernel mlibc
+        timeout-minutes: 300
