@@ -21,6 +21,9 @@ jobs:
       - name: Install xbstrap
         run: pip install --user xbstrap
 
+      - name: Install y4
+        run: pip install --user git+https://github.com/managarm/y4.git
+
       - name: Clone bootstrap-managarm
         run: git clone https://github.com/managarm/bootstrap-managarm.git build
 
@@ -50,8 +53,8 @@ jobs:
 
       - name: xbstrap init
         working-directory: build
-        run: ~/.local/bin/xbstrap init .
+        run: PATH="$HOME/.local/bin:$PATH" xbstrap init .
 
       - name: List available xbstrap tools/packages
         working-directory: build
-        run: ~/.local/bin/xbstrap list-tools
+        run: PATH="$HOME/.local/bin:$PATH" xbstrap list-tools
