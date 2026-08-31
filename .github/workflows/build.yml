@@ -82,12 +82,12 @@ jobs:
 
       - name: xbstrap initialize-empty-image
         working-directory: build
-        run: sudo PATH="$HOME/.local/bin:$PATH:/usr/sbin" $HOME/.local/bin/xbstrap run initialize-empty-image
+        run: sudo --preserve-env=PATH env PATH="$HOME/.local/bin:$PATH:/usr/sbin" $(which python3) $HOME/.local/bin/xbstrap run initialize-empty-image
         timeout-minutes: 30
 
       - name: xbstrap run make-image
         working-directory: build
-        run: sudo PATH="$HOME/.local/bin:$PATH:/usr/sbin" $HOME/.local/bin/xbstrap run make-image
+        run: sudo --preserve-env=PATH env PATH="$HOME/.local/bin:$PATH:/usr/sbin" $(which python3) $HOME/.local/bin/xbstrap run make-image
         timeout-minutes: 60
 
       - name: List build output
