@@ -30,6 +30,28 @@ jobs:
           curl https://repos.managarm.org/buildenv/managarm-buildenv.tar.gz -o managarm-rootfs.tar.gz
           tar xvf managarm-rootfs.tar.gz
 
-      - name: Show bootstrap-managarm contents
+      - name: Create bootstrap-site.yml
         working-directory: build
-        run: ls -la
+        run: |
+          cat > bootstrap-site.yml << 'SITEEOF'
+          auto_pull: true
+          pkg_management:
+            format: xbps
+            container:
+              runtime: cbuildrt
+              rootfs: managarm-rootfs
+              uid: 1000
+              gid: 1000
+          src_mount: /var/lib/managarm-buildenv/src
+          build_mount: /var/lib/managarm-buildenv/build
+          allow_containerless: true
+          SITEEOF
+          cat bootstrap-site.yml
+
+      - name: xbstrap init
+        working-directory: build
+        run: ~/.local/bin/xbstrap init .
+
+      - name: List available xbstrap tools/packages
+        working-directory: build
+        run: ~/.local/bin/xbstrap list-tools
