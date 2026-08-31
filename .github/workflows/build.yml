@@ -24,6 +24,13 @@ jobs:
       - name: Install y4
         run: pip install --user git+https://github.com/managarm/y4.git
 
+      - name: Install xbps-static
+        run: |
+          wget http://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
+          mkdir -p $HOME/xbps
+          tar xvf xbps-static-latest.x86_64-musl.tar.xz -C $HOME/xbps
+          echo "$HOME/xbps/usr/bin" >> $GITHUB_PATH
+
       - name: Clone bootstrap-managarm
         run: git clone https://github.com/managarm/bootstrap-managarm.git build
 
