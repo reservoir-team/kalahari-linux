@@ -92,13 +92,15 @@ jobs:
 
       - name: List build output
         working-directory: build
-        run: find . -maxdepth 3 -iname "*.img" -o -iname "*.iso" -o -iname "*.qcow2"
+        run: sudo find . -not -path "*/rootfs/*" -not -path "*/system-root/*" \( -iname "*.img" -o -iname "*.iso" -o -iname "*.qcow2" \)
 
       - name: Upload disk image artifact
         uses: actions/upload-artifact@v4
         with:
           name: kalahari-linux-image
           path: |
-            build/**/*.img
-            build/**/*.iso
+            build/*.img
+            build/*.iso
+            build/hdd.img
+            build/hdd.qcow2
           if-no-files-found: warn
