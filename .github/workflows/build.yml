@@ -102,9 +102,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: kalahari-linux-image
-          path: |
-            build/*.img
-            build/*.iso
-            build/hdd.img
-            build/hdd.qcow2
+          path: build/image
           if-no-files-found: warn
