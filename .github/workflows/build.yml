@@ -20,10 +20,10 @@ jobs:
             util-linux fdisk dosfstools e2fsprogs mtools
 
       - name: Install xbstrap
-        run: pip install --user xbstrap
+        run: sudo pip install --break-system-packages xbstrap
 
       - name: Install y4
-        run: pip install --user git+https://github.com/managarm/y4.git
+        run: sudo pip install --break-system-packages git+https://github.com/managarm/y4.git
 
       - name: Install xbps-static
         run: |
@@ -63,31 +63,31 @@ jobs:
 
       - name: xbstrap init
         working-directory: build
-        run: PATH="$HOME/.local/bin:$PATH" xbstrap init .
+        run: xbstrap init .
 
       - name: xbstrap install-tool (bootstrap toolchain)
         working-directory: build
-        run: PATH="$HOME/.local/bin:$PATH" xbstrap install-tool --all
+        run: xbstrap install-tool --all
         timeout-minutes: 300
 
       - name: xbstrap install core packages (kernel, mlibc)
         working-directory: build
-        run: PATH="$HOME/.local/bin:$PATH" xbstrap install --all managarm-kernel mlibc
+        run: xbstrap install --all managarm-kernel mlibc
         timeout-minutes: 300
 
       - name: xbstrap install managarm-system
         working-directory: build
-        run: PATH="$HOME/.local/bin:$PATH" xbstrap install --all managarm-system
+        run: xbstrap install --all managarm-system
         timeout-minutes: 300
 
       - name: xbstrap initialize-empty-image
         working-directory: build
-        run: sudo --preserve-env=PATH env PATH="$HOME/.local/bin:$PATH:/usr/sbin" $(which python3) $HOME/.local/bin/xbstrap run initialize-empty-image
+        run: sudo env PATH="/usr/local/bin:$PATH:/usr/sbin" xbstrap run initialize-empty-image
         timeout-minutes: 30
 
       - name: xbstrap run make-image
         working-directory: build
-        run: sudo --preserve-env=PATH env PATH="$HOME/.local/bin:$PATH:/usr/sbin" $(which python3) $HOME/.local/bin/xbstrap run make-image
+        run: sudo env PATH="/usr/local/bin:$PATH:/usr/sbin" xbstrap run make-image
         timeout-minutes: 60
 
       - name: List build output
