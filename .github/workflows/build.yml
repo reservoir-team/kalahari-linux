@@ -58,3 +58,8 @@ jobs:
       - name: List available xbstrap tools/packages
         working-directory: build
         run: PATH="$HOME/.local/bin:$PATH" xbstrap list-tools
+
+      - name: xbstrap install-tool (bootstrap toolchain)
+        working-directory: build
+        run: PATH="$HOME/.local/bin:$PATH" xbstrap install-tool --all
+        timeout-minutes: 300
