@@ -75,3 +75,26 @@ jobs:
         working-directory: build
         run: PATH="$HOME/.local/bin:$PATH" xbstrap install --all managarm-kernel mlibc
         timeout-minutes: 300
+
+      - name: xbstrap install managarm-system
+        working-directory: build
+        run: PATH="$HOME/.local/bin:$PATH" xbstrap install --all managarm-system
+        timeout-minutes: 300
+
+      - name: xbstrap run make-image
+        working-directory: build
+        run: PATH="$HOME/.local/bin:$PATH" xbstrap run make-image
+        timeout-minutes: 60
+
+      - name: List build output
+        working-directory: build
+        run: find . -maxdepth 3 -iname "*.img" -o -iname "*.iso" -o -iname "*.qcow2"
+
+      - name: Upload disk image artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kalahari-linux-image
+          path: |
+            build/**/*.img
+            build/**/*.iso
+          if-no-files-found: warn
