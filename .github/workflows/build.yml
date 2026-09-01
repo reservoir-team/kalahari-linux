@@ -80,6 +80,18 @@ jobs:
         run: xbstrap install --all managarm-system
         timeout-minutes: 300
 
+      - name: Inject Kalahari Linux customizations
+        working-directory: build
+        run: |
+          mkdir -p extrafiles/usr/local/bin
+          mkdir -p "extrafiles/usr/share/kalahari"
+          cp $GITHUB_WORKSPACE/kpk/kpk extrafiles/usr/local/bin/kpk
+          chmod +x extrafiles/usr/local/bin/kpk
+          cp -r $GITHUB_WORKSPACE/fastfetch extrafiles/usr/share/kalahari/fastfetch
+          cp -r $GITHUB_WORKSPACE/assets extrafiles/usr/share/kalahari/assets
+          ls -la extrafiles/usr/local/bin/
+          ls -la extrafiles/usr/share/kalahari/
+
       - name: xbstrap initialize-empty-image
         working-directory: build
         run: sudo env PATH="/usr/local/bin:$PATH:/usr/sbin" xbstrap run initialize-empty-image
