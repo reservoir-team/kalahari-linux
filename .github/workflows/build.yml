@@ -157,6 +157,10 @@ jobs:
           cp tools/host-limine/share/limine/limine-bios-cd.bin iso-root/boot/limine/ 2>/dev/null || true
           cp tools/host-limine/share/limine/limine-uefi-cd.bin iso-root/boot/limine/ 2>/dev/null || true
           cp tools/host-limine/share/limine/limine-bios.sys iso-root/boot/limine/ 2>/dev/null || true
+          echo "=== Looking for limine.conf ==="
+          find . -maxdepth 5 -iname "limine.conf" 2>/dev/null || true
+          find iso-root -iname "limine.conf" 2>/dev/null || true
+          cp iso-root/boot/limine.conf iso-root/boot/limine/limine.conf 2>/dev/null || true
           xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
             -no-emul-boot -boot-load-size 4 -boot-info-table \
             --efi-boot boot/limine/limine-uefi-cd.bin \
