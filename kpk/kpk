@@ -1,0 +1,81 @@
+#!/bin/sh
+# kpk - Kalahari Package Keeper
+# A simple frontend wrapper around xbps for Kalahari Linux.
+
+set -e
+
+PROG="kpk"
+VERSION="0.1.0"
+
+usage() {
+    cat << USAGE
+$PROG - Kalahari Package Keeper (v$VERSION)
+
+Usage:
+  kpk <package> install    Install a package
+  kpk <package> remove     Remove a package
+  kpk <package> search     Search for a package
+  kpk <package> update     Update a package (or all, if <package> is 'all')
+  kpk --help                Show this help message
+
+Examples:
+  kpk firefox install
+  kpk firefox remove
+  kpk firefox search
+  kpk all update
+USAGE
+}
+
+require_xbps() {
+    for tool in xbps-install xbps-remove xbps-query; do
+        if ! command -v "$tool" >/dev/null 2>&1; then
+            echo "$PROG: error: required tool '$tool' not found. Is xbps installed?" >&2
+            exit 1
+        fi
+    done
+}
+
+if [ "$#" -lt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    usage
+    exit 0
+fi
+
+if [ "$#" -lt 2 ]; then
+    echo "$PROG: error: missing action for package '$1'" >&2
+    usage
+    exit 1
+fi
+
+PACKAGE="$1"
+ACTION="$2"
+
+require_xbps
+
+case "$ACTION" in
+    install)
+        echo "$PROG: installing $PACKAGE..."
+        sudo xbps-install -Sy "$PACKAGE"
+        ;;
+    remove)
+        echo "$PROG: removing $PACKAGE..."
+        sudo xbps-remove -y "$PACKAGE"
+        ;;
+    search)
+        echo "$PROG: searching for $PACKAGE..."
+        xbps-query -Rs "$PACKAGE"
+        ;;
+    update)
+        if [ "$PACKAGE" = "all" ]; then
+            echo "$PROG: updating all packages..."
+            sudo xbps-install -Suy
+        else
+            echo "$PROG: updating $PACKAGE..."
+            sudo xbps-install -Suy "$PACKAGE"
+        fi
+        ;;
+    *)
+        echo "$PROG: error: unknown action '$ACTION'" >&2
+        usage
+        exit 1
+        ;;
+esac

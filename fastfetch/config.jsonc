@@ -1,0 +1,65 @@
+{
+    "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+    "logo": {
+        "source": "kalahari.txt",
+        "color": {
+            "1": "yellow",
+            "2": "208",
+            "3": "166",
+            "4": "130",
+            "5": "94"
+        },
+        "padding": {
+            "top": 1,
+            "right": 2
+        }
+    },
+    "display": {
+        "separator": " ",
+        "color": {
+            "keys": "yellow"
+        }
+    },
+    "modules": [
+        {
+            "type": "custom",
+            "format": "\u001b[1;33m--------------------------------"
+        },
+        {
+            "type": "title",
+            "key": " "
+        },
+        {
+            "type": "os",
+            "key": "OS"
+        },
+        {
+            "type": "kernel",
+            "key": "Kernel"
+        },
+        {
+            "type": "packages",
+            "key": "Packages"
+        },
+        {
+            "type": "shell",
+            "key": "Shell"
+        },
+        {
+            "type": "wm",
+            "key": "WM"
+        },
+        {
+            "type": "cpu",
+            "key": "CPU"
+        },
+        {
+            "type": "memory",
+            "key": "Memory"
+        },
+        {
+            "type": "custom",
+            "format": "\u001b[1;33m--------------------------------"
+        }
+    ]
+}

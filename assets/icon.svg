@@ -1,0 +1,27 @@
+<svg width="380" height="380" viewBox="0 0 380 380" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="sky2" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#F4D9A8"/>
+<stop offset="55%" stop-color="#F0B26B"/>
+<stop offset="100%" stop-color="#E8935A"/>
+</linearGradient>
+<linearGradient id="sun2" x1="0" y1="0" x2="0" y2="1">
+<stop offset="0%" stop-color="#FFE9B8"/>
+<stop offset="100%" stop-color="#F6B94A"/>
+</linearGradient>
+<clipPath id="circleClip">
+<circle cx="190" cy="190" r="170"/>
+</clipPath>
+</defs>
+
+<g clip-path="url(#circleClip)">
+<rect x="0" y="0" width="380" height="380" fill="url(#sky2)"/>
+<circle cx="190" cy="185" r="62" fill="url(#sun2)"/>
+<path d="M0 255 Q 70 220 140 250 T 280 245 T 380 260 V380 H0 Z" fill="#C9713F"/>
+<path d="M0 280 Q 90 250 190 277 T 380 273 V380 H0 Z" fill="#B85C34"/>
+<path d="M0 307 Q 100 285 220 305 T 380 300 V380 H0 Z" fill="#96432A"/>
+<path d="M0 330 Q 130 313 260 327 T 380 323 V380 H0 Z" fill="#7A3220"/>
+</g>
+
+<circle cx="190" cy="190" r="170" fill="none" stroke="#7A3220" stroke-width="4"/>
+</svg>
