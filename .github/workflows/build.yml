@@ -131,11 +131,19 @@ jobs:
         run: |
           mkdir -p iso-root/boot/limine
           mkdir -p iso-root/EFI/BOOT
+          echo "=== Partition table ==="
+          sudo fdisk -l image
+          echo "=== Using losetup with partition scan ==="
+          sudo losetup -Pf image
+          LOOPDEV=$(sudo losetup -j image | cut -d: -f1)
+          echo "Loop device: $LOOPDEV"
+          lsblk "$LOOPDEV" || true
           sudo mkdir -p mnt-iso-src
-          sudo mount -o loop,offset=1048576 image mnt-iso-src || sudo mount -o loop image mnt-iso-src
+          sudo mount "${LOOPDEV}p2" mnt-iso-src || sudo mount "${LOOPDEV}p1" mnt-iso-src
           sudo cp -r mnt-iso-src/boot/* iso-root/boot/ 2>/dev/null || true
           sudo cp -r mnt-iso-src/* iso-root/ 2>/dev/null || true
           sudo umount mnt-iso-src
+          sudo losetup -d "$LOOPDEV"
           cp tools/host-limine/share/limine/limine-bios-cd.bin iso-root/boot/limine/ 2>/dev/null || true
           cp tools/host-limine/share/limine/limine-uefi-cd.bin iso-root/boot/limine/ 2>/dev/null || true
           xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
