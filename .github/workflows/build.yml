@@ -151,7 +151,10 @@ jobs:
           echo "=== EFI partition contents ==="
           sudo find mnt-efi -maxdepth 4
           sudo cp -r mnt-efi/EFI iso-root/ 2>/dev/null || true
-          sudo cp -r mnt-efi/boot/* iso-root/boot/ 2>/dev/null || true
+          sudo cp mnt-efi/limine.conf iso-root/boot/ 2>/dev/null || true
+          sudo cp mnt-efi/limine-bios.sys iso-root/boot/ 2>/dev/null || true
+          sudo cp -r mnt-efi/managarm iso-root/boot/managarm 2>/dev/null || true
+          sudo cp -r mnt-efi/grub iso-root/boot/grub 2>/dev/null || true
           sudo umount mnt-efi
           sudo losetup -d "$LOOPDEV"
           echo "=== Looking for limine-bios.sys ==="
