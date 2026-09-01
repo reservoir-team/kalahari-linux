@@ -89,8 +89,13 @@ jobs:
           chmod +x extrafiles/usr/local/bin/kpk
           cp -r $GITHUB_WORKSPACE/fastfetch extrafiles/usr/share/kalahari/fastfetch
           cp -r $GITHUB_WORKSPACE/assets extrafiles/usr/share/kalahari/assets
+          echo '' >> extrafiles/.bashrc
+          echo '# Kalahari Linux welcome' >> extrafiles/.bashrc
+          echo 'fastfetch --config /usr/share/kalahari/fastfetch/config.jsonc' >> extrafiles/.bashrc
           ls -la extrafiles/usr/local/bin/
           ls -la extrafiles/usr/share/kalahari/
+          echo "=== .bashrc tail ==="
+          tail -5 extrafiles/.bashrc
 
       - name: xbstrap initialize-empty-image
         working-directory: build
