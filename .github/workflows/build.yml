@@ -58,6 +58,7 @@ jobs:
           allow_containerless: true
           define_options:
             mount-using: 'loopback'
+            image-size: '1.5G'
           SITEEOF
           cat bootstrap-site.yml
 
