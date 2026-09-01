@@ -151,8 +151,12 @@ jobs:
           sudo cp -r mnt-efi/EFI iso-root/ 2>/dev/null || true
           sudo umount mnt-efi
           sudo losetup -d "$LOOPDEV"
+          echo "=== Looking for limine-bios.sys ==="
+          find tools/host-limine -iname "limine-bios.sys" 2>/dev/null || true
+          find . -maxdepth 4 -iname "limine-bios.sys" 2>/dev/null || true
           cp tools/host-limine/share/limine/limine-bios-cd.bin iso-root/boot/limine/ 2>/dev/null || true
           cp tools/host-limine/share/limine/limine-uefi-cd.bin iso-root/boot/limine/ 2>/dev/null || true
+          cp tools/host-limine/share/limine/limine-bios.sys iso-root/boot/limine/ 2>/dev/null || true
           xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
             -no-emul-boot -boot-load-size 4 -boot-info-table \
             --efi-boot boot/limine/limine-uefi-cd.bin \
