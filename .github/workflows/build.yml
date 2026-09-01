@@ -138,11 +138,17 @@ jobs:
           LOOPDEV=$(sudo losetup -j image | cut -d: -f1)
           echo "Loop device: $LOOPDEV"
           lsblk "$LOOPDEV" || true
-          sudo mkdir -p mnt-iso-src
-          sudo mount "${LOOPDEV}p2" mnt-iso-src || sudo mount "${LOOPDEV}p1" mnt-iso-src
-          sudo cp -r mnt-iso-src/boot/* iso-root/boot/ 2>/dev/null || true
-          sudo cp -r mnt-iso-src/* iso-root/ 2>/dev/null || true
-          sudo umount mnt-iso-src
+          sudo mkdir -p mnt-root mnt-efi
+          echo "=== Mounting root partition (p3) ==="
+          sudo mount "${LOOPDEV}p3" mnt-root
+          echo "=== Root partition contents ==="
+          ls -la mnt-root/
+          sudo cp -a mnt-root/. iso-root/
+          sudo umount mnt-root
+          echo "=== Mounting EFI partition (p2) for boot files ==="
+          sudo mount "${LOOPDEV}p2" mnt-efi
+          sudo cp -r mnt-efi/EFI iso-root/ 2>/dev/null || true
+          sudo umount mnt-efi
           sudo losetup -d "$LOOPDEV"
           cp tools/host-limine/share/limine/limine-bios-cd.bin iso-root/boot/limine/ 2>/dev/null || true
           cp tools/host-limine/share/limine/limine-uefi-cd.bin iso-root/boot/limine/ 2>/dev/null || true
