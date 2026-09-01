@@ -122,3 +122,32 @@ jobs:
           name: kalahari-linux-image
           path: build/image
           if-no-files-found: warn
+
+      - name: Install xorriso for ISO conversion
+        run: sudo apt-get install -y xorriso
+
+      - name: Convert raw image to bootable ISO
+        working-directory: build
+        run: |
+          mkdir -p iso-root/boot/limine
+          mkdir -p iso-root/EFI/BOOT
+          sudo mkdir -p mnt-iso-src
+          sudo mount -o loop,offset=1048576 image mnt-iso-src || sudo mount -o loop image mnt-iso-src
+          sudo cp -r mnt-iso-src/boot/* iso-root/boot/ 2>/dev/null || true
+          sudo cp -r mnt-iso-src/* iso-root/ 2>/dev/null || true
+          sudo umount mnt-iso-src
+          cp tools/host-limine/share/limine/limine-bios-cd.bin iso-root/boot/limine/ 2>/dev/null || true
+          cp tools/host-limine/share/limine/limine-uefi-cd.bin iso-root/boot/limine/ 2>/dev/null || true
+          xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
+            -no-emul-boot -boot-load-size 4 -boot-info-table \
+            --efi-boot boot/limine/limine-uefi-cd.bin \
+            -efi-boot-part --efi-boot-image --protective-msdos-label \
+            iso-root -o kalahari-linux.iso
+          ls -la kalahari-linux.iso
+
+      - name: Upload ISO artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kalahari-linux-iso
+          path: build/kalahari-linux.iso
+          if-no-files-found: warn
