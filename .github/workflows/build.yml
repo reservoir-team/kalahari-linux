@@ -145,6 +145,7 @@ jobs:
           ls -la mnt-root/
           sudo cp -a mnt-root/. iso-root/
           sudo umount mnt-root
+          sudo rm -rf iso-root/lost+found
           echo "=== Mounting EFI partition (p2) for boot files ==="
           sudo mount "${LOOPDEV}p2" mnt-efi
           sudo cp -r mnt-efi/EFI iso-root/ 2>/dev/null || true
