@@ -177,6 +177,14 @@ jobs:
             -efi-boot-part --efi-boot-image --protective-msdos-label \
             iso-root -o kalahari-linux.iso
           ls -la kalahari-linux.iso
+          echo "=== tools/host-limine tree ==="
+          find tools/host-limine
+          echo "=== Looking for limine CLI tool ==="
+          find tools/host-limine -type f -executable
+          find tools/host-limine -iname "limine" -type f
+          tools/host-limine/bin/limine bios-install kalahari-linux.iso || \
+          tools/host-limine/limine bios-install kalahari-linux.iso || \
+          echo "limine CLI binary not found at expected paths"
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
