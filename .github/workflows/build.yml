@@ -171,11 +171,14 @@ jobs:
           find iso-root/boot -maxdepth 3
           echo "=== limine.conf content ==="
           cat iso-root/boot/limine.conf
+          echo "=== eir-limine file check ==="
+          file iso-root/boot/managarm/eir-limine
+          ls -la iso-root/boot/managarm/eir-limine
+          md5sum iso-root/boot/managarm/eir-limine
           xorriso -as mkisofs -b boot/limine/limine-bios-cd.bin \
             -no-emul-boot -boot-load-size 4 -boot-info-table \
             --efi-boot boot/limine/limine-uefi-cd.bin \
-            -efi-boot-part --efi-boot-image \
-            -isohybrid-mbr tools/host-limine/share/limine/limine-bios-hdd.bin \
+            -efi-boot-part --efi-boot-image --protective-msdos-label \
             iso-root -o kalahari-linux.iso
           ls -la kalahari-linux.iso
           echo "=== tools/host-limine tree ==="
