@@ -182,8 +182,9 @@ jobs:
           echo "=== Looking for limine CLI tool ==="
           find tools/host-limine -type f -executable
           find tools/host-limine -iname "limine" -type f
-          chmod +x tools/host-limine/share/limine/limine
-          tools/host-limine/share/limine/limine bios-install kalahari-linux.iso
+          cp tools/host-limine/share/limine/limine /tmp/limine-cli
+          chmod +x /tmp/limine-cli
+          /tmp/limine-cli bios-install kalahari-linux.iso
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
