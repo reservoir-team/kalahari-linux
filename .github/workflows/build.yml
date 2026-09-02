@@ -175,6 +175,7 @@ jobs:
             -no-emul-boot -boot-load-size 4 -boot-info-table \
             --efi-boot boot/limine/limine-uefi-cd.bin \
             -efi-boot-part --efi-boot-image --protective-msdos-label \
+            -isohybrid-mbr tools/host-limine/share/limine/limine-bios-hdd.bin \
             iso-root -o kalahari-linux.iso
           ls -la kalahari-linux.iso
           echo "=== tools/host-limine tree ==="
