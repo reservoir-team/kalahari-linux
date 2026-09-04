@@ -4,8 +4,9 @@
 
 set -e
 
-echo "==> Updating package lists"
+echo "==> Updating and upgrading system packages"
 sudo apt-get update
+sudo apt-get upgrade -y
 
 echo "==> Installing LFS build dependencies"
 sudo apt-get install -y \
