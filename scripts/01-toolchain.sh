@@ -22,7 +22,7 @@ wget -nc "https://www.linuxfromscratch.org/lfs/view/stable/wget-list"
 wget -nc "https://www.linuxfromscratch.org/lfs/view/stable/md5sums"
 
 echo "==> Downloading all sources from official list"
-wget --input-file=wget-list --continue
+wget --input-file=wget-list --continue --tries=5 --timeout=30 || echo "WARNING: wget reported errors (likely transient), verifying files anyway via checksum"
 
 echo "==> Verifying checksums against official LFS md5sums"
 md5sum -c md5sums
