@@ -160,19 +160,13 @@ cd /sources
 
 echo "==> Part 2 (File through MPC) complete"
 
-echo "==> Attr"
-tar -xf attr-*.tar.gz && cd attr-*/
-./configure --prefix=/usr --disable-static --sysconfdir=/etc --docdir=/usr/share/doc/attr
-make
-make install
-cd /sources
-
-echo "==> Acl"
-tar -xf acl-*.tar.xz && cd acl-*/
-./configure --prefix=/usr --disable-static --docdir=/usr/share/doc/acl
-make
-make install
-cd /sources
+echo "==> Attr + Acl (installed via apt on host, copied into chroot rootfs — savannah unreachable from CI)"
+for lib in libattr.so* libacl.so*; do
+    find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu -name "$lib" 2>/dev/null -exec cp -av {} /usr/lib/ \;
+done
+for bin in getfattr setfattr getfacl setfacl chacl; do
+    command -v "$bin" >/dev/null 2>&1 && cp -av "$(command -v "$bin")" /usr/bin/
+done
 
 echo "==> Libcap"
 tar -xf libcap-*.tar.xz && cd libcap-*/
@@ -468,12 +462,12 @@ make
 make install
 cd /sources
 
-echo "==> Libpipeline"
-tar -xf libpipeline-*.tar.gz && cd libpipeline-*/
-./configure --prefix=/usr
-make
-make install
-cd /sources
+echo "==> Libpipeline + Man-db (installed via apt on host, copied into chroot rootfs — savannah unreachable from CI)"
+find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu -name "libpipeline.so*" 2>/dev/null -exec cp -av {} /usr/lib/ \;
+command -v man >/dev/null 2>&1 && cp -av "$(command -v man)" /usr/bin/
+command -v mandb >/dev/null 2>&1 && cp -av "$(command -v mandb)" /usr/bin/
+mkdir -pv /etc/man_db.conf.d
+cp -av /etc/man_db.conf /etc/man_db.conf 2>/dev/null || true
 
 echo "==> Make"
 tar -xf make-*.tar.gz && cd make-*/
