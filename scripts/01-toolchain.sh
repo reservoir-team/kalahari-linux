@@ -29,13 +29,13 @@ while IFS= read -r url; do
     tries=0
     until [ -f "$fname" ] && [ -s "$fname" ]; do
         tries=$((tries + 1))
-        if [ "$tries" -gt 5 ]; then
-            echo "ERROR: failed to download $fname after 5 tries" >&2
+        if [ "$tries" -gt 10 ]; then
+            echo "ERROR: failed to download $fname after 10 tries" >&2
             failed=1
             break
         fi
         echo "==> Downloading $fname (attempt $tries)"
-        wget -q --timeout=30 -O "$fname.tmp" "$url" && mv "$fname.tmp" "$fname" || rm -f "$fname.tmp"
+        wget -q --timeout=45 -O "$fname.tmp" "$url" && mv "$fname.tmp" "$fname" || { rm -f "$fname.tmp"; sleep 5; }
     done
 done < wget-list
 
