@@ -21,8 +21,32 @@ echo "==> Downloading official LFS wget-list and md5sums"
 wget -nc "https://www.linuxfromscratch.org/lfs/view/stable/wget-list"
 wget -nc "https://www.linuxfromscratch.org/lfs/view/stable/md5sums"
 
-echo "==> Downloading all sources from official list"
-wget --input-file=wget-list --continue --tries=5 --timeout=30 || echo "WARNING: wget reported errors (likely transient), verifying files anyway via checksum"
+echo "==> Downloading all sources from official list (per-file retry loop)"
+failed=0
+while IFS= read -r url; do
+    fname=$(basename "$url")
+    tries=0
+    until [ -f "$fname" ] && [ -s "$fname" ]; do
+        tries=$((tries + 1))
+        if [ "$tries" -gt 5 ]; then
+            echo "ERROR: failed to download $fname after 5 tries" >&2
+            failed=1
+            break
+        fi
+        echo "==> Downloading $fname (attempt $tries)"
+        wget -q --timeout=30 -O "$fname.tmp" "$url" && mv "$fname.tmp" "$fname" || rm -f "$fname.tmp"
+    done
+done < wget-list
+
+if [ "$failed" -eq 1 ]; then
+    echo "ERROR: one or more files failed to download after retries" >&2
+    exit 1
+fi
+
+echo "==> All files downloaded, verifying count"
+expected=$(wc -l < wget-list)
+actual=$(find . -maxdepth 1 -type f ! -name "wget-list" ! -name "md5sums" | wc -l)
+echo "Expected: $expected files (approx, patches URL not always counted the same), Found: $actual"
 
 echo "==> Verifying checksums against official LFS md5sums"
 md5sum -c md5sums
