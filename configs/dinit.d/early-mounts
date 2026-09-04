@@ -1,0 +1,4 @@
+type        = process
+command     = /usr/lib/kalahari/early-mounts.sh
+logfile     = /var/log/early-mounts.log
+restart     = false

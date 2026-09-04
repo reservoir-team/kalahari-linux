@@ -1,0 +1,4 @@
+type        = process
+command     = /usr/lib/iwd/iwd
+depends-on  = udev
+smooth-recovery = true

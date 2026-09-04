@@ -1,0 +1,4 @@
+type        = process
+command     = /usr/sbin/dhcpcd -B
+depends-on  = udev
+smooth-recovery = true

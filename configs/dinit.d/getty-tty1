@@ -1,0 +1,4 @@
+type        = process
+command     = /sbin/agetty --noclear tty1 linux
+restart     = true
+depends-on  = early-mounts

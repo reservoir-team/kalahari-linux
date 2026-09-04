@@ -1,0 +1,4 @@
+type        = process
+command     = /usr/sbin/udevd --daemon
+smooth-recovery = true
+depends-on  = early-mounts

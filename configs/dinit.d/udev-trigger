@@ -1,0 +1,4 @@
+type        = scripted
+command     = /usr/bin/udevadm trigger --action=add
+depends-on  = udev
+waits-for   = udev
