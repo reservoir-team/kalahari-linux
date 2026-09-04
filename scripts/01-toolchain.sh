@@ -21,6 +21,9 @@ echo "==> Downloading official LFS wget-list and md5sums"
 wget -nc "https://www.linuxfromscratch.org/lfs/view/stable/wget-list"
 wget -nc "https://www.linuxfromscratch.org/lfs/view/stable/md5sums"
 
+echo "==> Rewriting ftp.gnu.org URLs to use ftpmirror.gnu.org (auto-selects a working mirror)"
+sed -i 's|https://ftp.gnu.org/gnu/|https://ftpmirror.gnu.org/|g' wget-list
+
 echo "==> Downloading all sources from official list (per-file retry loop)"
 failed=0
 while IFS= read -r url; do
