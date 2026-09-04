@@ -1,9 +1,9 @@
 name: Build Kalahari Linux
 
 on:
-  workflow_dispatch:
   push:
     branches: [main]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,187 +12,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip git meson ninja-build \
-            xz-utils cpio unzip rsync wget curl \
-            util-linux fdisk dosfstools e2fsprogs mtools
+      - name: Host prep
+        run: bash scripts/00-host-prep.sh
 
-      - name: Install xbstrap
-        run: sudo pip install --break-system-packages xbstrap
+      - name: Build cross toolchain
+        run: bash scripts/01-toolchain.sh
 
-      - name: Install y4
-        run: sudo pip install --break-system-packages git+https://github.com/managarm/y4.git
+      - name: Build temporary system
+        run: bash scripts/02-tempsystem.sh
 
-      - name: Install xbps-static
-        run: |
-          wget http://repo-default.voidlinux.org/static/xbps-static-latest.x86_64-musl.tar.xz
-          mkdir -p $HOME/xbps
-          tar xvf xbps-static-latest.x86_64-musl.tar.xz -C $HOME/xbps
-          echo "$HOME/xbps/usr/bin" >> $GITHUB_PATH
+      - name: Enter chroot & build final system, dinit, kernel, kpk, branding
+        run: sudo bash scripts/03-chroot-enter.sh
 
-      - name: Clone bootstrap-managarm
-        run: git clone https://github.com/managarm/bootstrap-managarm.git build
-
-      - name: Download Managarm buildenv
-        working-directory: build
-        run: |
-          curl https://repos.managarm.org/buildenv/managarm-buildenv.tar.gz -o managarm-rootfs.tar.gz
-          tar xvf managarm-rootfs.tar.gz
-
-      - name: Create bootstrap-site.yml
-        working-directory: build
-        run: |
-          cat > bootstrap-site.yml << 'SITEEOF'
-          auto_pull: true
-          pkg_management:
-            format: xbps
-            container:
-              runtime: cbuildrt
-              rootfs: managarm-rootfs
-              uid: 1000
-              gid: 1000
-          src_mount: /var/lib/managarm-buildenv/src
-          build_mount: /var/lib/managarm-buildenv/build
-          allow_containerless: true
-          define_options:
-            mount-using: 'loopback'
-            image-size: '2G'
-          SITEEOF
-          cat bootstrap-site.yml
-
-      - name: xbstrap init
-        working-directory: build
-        run: xbstrap init .
-
-      - name: xbstrap install-tool (bootstrap toolchain)
-        working-directory: build
-        run: xbstrap install-tool --all
-        timeout-minutes: 300
-
-      - name: xbstrap install core packages (kernel, mlibc)
-        working-directory: build
-        run: xbstrap install --all managarm-kernel mlibc
-        timeout-minutes: 300
-
-      - name: xbstrap install managarm-system
-        working-directory: build
-        run: xbstrap install --all managarm-system
-        timeout-minutes: 300
-
-      - name: Inject Kalahari Linux customizations
-        working-directory: build
-        run: |
-          mkdir -p extrafiles/usr/local/bin
-          mkdir -p "extrafiles/usr/share/kalahari"
-          cp $GITHUB_WORKSPACE/kpk/kpk extrafiles/usr/local/bin/kpk
-          chmod +x extrafiles/usr/local/bin/kpk
-          cp -r $GITHUB_WORKSPACE/fastfetch extrafiles/usr/share/kalahari/fastfetch
-          cp -r $GITHUB_WORKSPACE/assets extrafiles/usr/share/kalahari/assets
-          echo '' >> extrafiles/.bashrc
-          echo '# Kalahari Linux welcome' >> extrafiles/.bashrc
-          echo 'fastfetch --config /usr/share/kalahari/fastfetch/config.jsonc' >> extrafiles/.bashrc
-          ls -la extrafiles/usr/local/bin/
-          ls -la extrafiles/usr/share/kalahari/
-          echo "=== .bashrc tail ==="
-          tail -5 extrafiles/.bashrc
-
-      - name: xbstrap initialize-empty-image
-        working-directory: build
-        run: sudo env PATH="/usr/local/bin:$PATH:/usr/sbin" xbstrap run initialize-empty-image
-        timeout-minutes: 30
-
-      - name: xbstrap run make-image
-        working-directory: build
-        run: sudo env PATH="/usr/local/bin:$PATH:/usr/sbin" xbstrap run make-image
-        timeout-minutes: 60
-
-      - name: List build output
-        working-directory: build
-        run: |
-          echo "=== Searching for image files ==="
-          sudo find . -maxdepth 2 -type f | grep -v "^\./rootfs" | grep -v "^\./system-root" || true
-          echo "=== bootstrap.yml image-related config ==="
-          grep -ri "image" bootstrap-site.yml || true
-
-      - name: Upload disk image artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: kalahari-linux-image
-          path: build/image
-          if-no-files-found: warn
-
-      - name: Install xorriso for ISO conversion
-        run: sudo apt-get install -y xorriso
-
-      - name: Convert raw image to bootable ISO
-        working-directory: build
-        run: |
-          mkdir -p iso-root/boot/limine
-          mkdir -p iso-root/EFI/BOOT
-          echo "=== Partition table ==="
-          sudo fdisk -l image
-          echo "=== Using losetup with partition scan ==="
-          sudo losetup -Pf image
-          LOOPDEV=$(sudo losetup -j image | cut -d: -f1)
-          echo "Loop device: $LOOPDEV"
-          lsblk "$LOOPDEV" || true
-          sudo mkdir -p mnt-root mnt-efi
-          echo "=== Mounting root partition (p3) ==="
-          sudo mount "${LOOPDEV}p3" mnt-root
-          echo "=== Root partition contents ==="
-          ls -la mnt-root/
-          sudo cp -a mnt-root/. iso-root/
-          sudo umount mnt-root
-          sudo rm -rf iso-root/lost+found
-          echo "=== Mounting EFI partition (p2) for boot files ==="
-          sudo mount "${LOOPDEV}p2" mnt-efi
-          echo "=== EFI partition contents ==="
-          sudo find mnt-efi -maxdepth 4
-          sudo cp -r mnt-efi/EFI iso-root/ 2>/dev/null || true
-          sudo cp mnt-efi/limine.conf iso-root/boot/ 2>/dev/null || true
-          sudo cp mnt-efi/limine-bios.sys iso-root/boot/ 2>/dev/null || true
-          sudo cp -r mnt-efi/managarm iso-root/boot/managarm 2>/dev/null || true
-          sudo cp -r mnt-efi/grub iso-root/boot/grub 2>/dev/null || true
-          sudo umount mnt-efi
-          sudo losetup -d "$LOOPDEV"
-          echo "=== Looking for limine-bios.sys ==="
-          find tools/host-limine -iname "limine-bios.sys" 2>/dev/null || true
-          find . -maxdepth 4 -iname "limine-bios.sys" 2>/dev/null || true
-          cp tools/host-limine/share/limine/limine-bios-cd.bin iso-root/boot/limine/ 2>/dev/null || true
-          cp tools/host-limine/share/limine/limine-uefi-cd.bin iso-root/boot/limine/ 2>/dev/null || true
-          cp tools/host-limine/share/limine/limine-bios.sys iso-root/boot/limine/ 2>/dev/null || true
-          echo "=== Looking for limine.conf ==="
-          find . -maxdepth 5 -iname "limine.conf" 2>/dev/null || true
-          find iso-root -iname "limine.conf" 2>/dev/null || true
-          cp iso-root/boot/limine.conf iso-root/boot/limine/limine.conf 2>/dev/null || true
-          echo "=== Final iso-root/boot structure ==="
-          find iso-root/boot -maxdepth 3
-          echo "=== limine.conf content ==="
-          cat iso-root/boot/limine.conf
-          echo "=== eir-limine file check ==="
-          file iso-root/boot/managarm/eir-limine
-          ls -la iso-root/boot/managarm/eir-limine
-          md5sum iso-root/boot/managarm/eir-limine
-          xorriso -as mkisofs -R -r -b boot/limine/limine-bios-cd.bin \
-            -no-emul-boot -boot-load-size 4 -boot-info-table \
-            --efi-boot boot/limine/limine-uefi-cd.bin \
-            -efi-boot-part --efi-boot-image --protective-msdos-label \
-            iso-root -o kalahari-linux.iso
-          ls -la kalahari-linux.iso
-          echo "=== tools/host-limine tree ==="
-          find tools/host-limine
-          echo "=== Looking for limine CLI tool ==="
-          find tools/host-limine -type f -executable
-          find tools/host-limine -iname "limine" -type f
-          cp tools/host-limine/share/limine/limine /tmp/limine-cli
-          chmod +x /tmp/limine-cli
-          /tmp/limine-cli bios-install kalahari-linux.iso
+      - name: Build ISO image
+        run: sudo bash scripts/09-image.sh
 
       - name: Upload ISO artifact
         uses: actions/upload-artifact@v4
         with:
           name: kalahari-linux-iso
-          path: build/kalahari-linux.iso
-          if-no-files-found: warn
+          path: output/*.iso
