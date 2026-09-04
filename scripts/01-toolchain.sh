@@ -23,11 +23,11 @@ echo "==> Rewriting ftp.gnu.org URLs to use Tsinghua mirror (Asia, generally rel
 sed -i 's|https://ftp.gnu.org/gnu/|https://mirrors.tuna.tsinghua.edu.cn/gnu/|g' wget-list
 
 echo "==> Removing packages that will be installed via apt instead of compiled (savannah unreachable from CI)"
-grep -vE "acl-2\.3\.2|attr-2\.5\.2|libpipeline-1\.5\.8" wget-list > wget-list.filtered
+grep -vE "acl-2\.3\.2|attr-2\.5\.2|libpipeline-1\.5\.8|man-db-2\.13\.1" wget-list > wget-list.filtered
 mv wget-list.filtered wget-list
 
-echo "==> Replacing ncurses snapshot URL with stable release (snapshot host unreachable from CI)"
-sed -i 's|https://invisible-mirror.net/archives/ncurses/current/ncurses-6.5-20250809.tgz|https://ftpmirror.gnu.org/ncurses/ncurses-6.5.tar.gz|' wget-list
+echo "==> Replacing ncurses snapshot URL with stable release via Tsinghua mirror"
+sed -i 's|https://invisible-mirror.net/archives/ncurses/current/ncurses-6.5-20250809.tgz|https://mirrors.tuna.tsinghua.edu.cn/gnu/ncurses/ncurses-6.5.tar.gz|' wget-list
 
 echo "==> Installing acl, attr, libpipeline, man-db, ncurses via apt (fallback for unreachable savannah/invisible-mirror sources)"
 sudo apt-get install -y acl attr libpipeline1 man-db libncurses-dev libncursesw6
