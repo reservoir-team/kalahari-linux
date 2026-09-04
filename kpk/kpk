@@ -1,11 +1,19 @@
 #!/bin/sh
 # kpk - Kalahari Package Keeper
-# A simple frontend wrapper around xbps for Kalahari Linux.
+# Reads index.json from kpk-packages repo, downloads .kpk.tar.zst packages,
+# verifies checksum, extracts by type, installs to system paths.
 
 set -e
 
 PROG="kpk"
 VERSION="0.1.0"
+
+INDEX_URL="${KPK_INDEX_URL:-https://raw.githubusercontent.com/reservoir-team/kpk-packages/main/index.json}"
+CACHE_DIR="${KPK_CACHE_DIR:-/var/cache/kpk}"
+INDEX_CACHE="$CACHE_DIR/index.json"
+STATE_DIR="${KPK_STATE_DIR:-/var/lib/kpk/installed}"
+TMP_DIR="$CACHE_DIR/tmp"
+ROOT_PREFIX="${KPK_ROOT:-}"
 
 usage() {
     cat << USAGE
@@ -15,33 +23,200 @@ Usage:
   kpk <package> install    Install a package
   kpk <package> remove     Remove a package
   kpk <package> search     Search for a package
-  kpk <package> update     Update a package (or all, if <package> is 'all')
+  kpk all update           Update package index
   kpk --help                Show this help message
-
-Examples:
-  kpk firefox install
-  kpk firefox remove
-  kpk firefox search
-  kpk all update
 USAGE
 }
 
-require_xbps() {
-    for tool in xbps-install xbps-remove xbps-query; do
+require_tools() {
+    for tool in curl jq tar zstd sha256sum; do
         if ! command -v "$tool" >/dev/null 2>&1; then
-            echo "$PROG: error: required tool '$tool' not found. Is xbps installed?" >&2
+            echo "$PROG: error: required tool '$tool' not found" >&2
             exit 1
         fi
     done
 }
+
+fetch_index() {
+    mkdir -p "$CACHE_DIR"
+    echo "$PROG: fetching package index..."
+    curl -fsSL "$INDEX_URL" -o "$INDEX_CACHE.tmp"
+    mv "$INDEX_CACHE.tmp" "$INDEX_CACHE"
+}
+
+ensure_index() {
+    if [ ! -f "$INDEX_CACHE" ]; then
+        fetch_index
+    fi
+}
+
+pkg_field() {
+    # $1 = package name, $2 = jq field path
+    jq -r ".packages[\"$1\"].$2 // empty" "$INDEX_CACHE"
+}
+
+cmd_search() {
+    pkg="$1"
+    ensure_index
+    if jq -e ".packages[\"$pkg\"]" "$INDEX_CACHE" >/dev/null 2>&1; then
+        version=$(pkg_field "$pkg" "package_version")
+        desc=$(pkg_field "$pkg" "description")
+        echo "$pkg $version"
+        echo "  $desc"
+    else
+        echo "$PROG: no package found matching '$pkg'"
+        exit 1
+    fi
+}
+
+cmd_install() {
+    pkg="$1"
+    ensure_index
+
+    if ! jq -e ".packages[\"$pkg\"]" "$INDEX_CACHE" >/dev/null 2>&1; then
+        echo "$PROG: error: package '$pkg' not found in index" >&2
+        exit 1
+    fi
+
+    if [ -f "$STATE_DIR/$pkg.installed" ]; then
+        echo "$PROG: $pkg is already installed"
+        return 0
+    fi
+
+    url=$(pkg_field "$pkg" "download_url")
+    sha256=$(pkg_field "$pkg" "sha256")
+    deps=$(jq -r ".packages[\"$pkg\"].dependencies[]?" "$INDEX_CACHE")
+
+    for dep in $deps; do
+        if [ ! -f "$STATE_DIR/$dep.installed" ]; then
+            echo "$PROG: resolving dependency '$dep'"
+            cmd_install "$dep"
+        fi
+    done
+
+    mkdir -p "$TMP_DIR"
+    archive="$TMP_DIR/$pkg.kpk.tar.zst"
+
+    echo "$PROG: downloading $pkg..."
+    curl -fsSL "$url" -o "$archive"
+
+    echo "$PROG: verifying checksum..."
+    actual_sha=$(sha256sum "$archive" | cut -d' ' -f1)
+    if [ "$actual_sha" != "$sha256" ]; then
+        echo "$PROG: error: checksum mismatch for '$pkg'" >&2
+        echo "  expected: $sha256" >&2
+        echo "  actual:   $actual_sha" >&2
+        rm -f "$archive"
+        exit 1
+    fi
+
+    extract_dir="$TMP_DIR/$pkg-extract"
+    rm -rf "$extract_dir"
+    mkdir -p "$extract_dir"
+
+    echo "$PROG: extracting..."
+    zstd -d "$archive" -c | tar -x -C "$extract_dir"
+
+    if [ ! -f "$extract_dir/.kpkmeta" ]; then
+        echo "$PROG: error: .kpkmeta missing from package '$pkg'" >&2
+        exit 1
+    fi
+
+    perms=$(jq -r '.permissions // "755"' "$extract_dir/.kpkmeta")
+    types=$(jq -r '.type[]?' "$extract_dir/.kpkmeta")
+
+    manifest="$STATE_DIR/$pkg.manifest"
+    mkdir -p "$STATE_DIR"
+    : > "$manifest"
+    installed_count=0
+
+    for t in $types; do
+        case "$t" in
+            binary) target="$ROOT_PREFIX/usr/bin" ;;
+            sbin) target="$ROOT_PREFIX/usr/sbin" ;;
+            lib) target="$ROOT_PREFIX/usr/lib" ;;
+            config) target="$ROOT_PREFIX/etc" ;;
+            service) target="$ROOT_PREFIX/etc/dinit.d" ;;
+            man) target="$ROOT_PREFIX/usr/share/man/man1" ;;
+            doc) target="$ROOT_PREFIX/usr/share/doc" ;;
+            data) target="$ROOT_PREFIX/usr/share" ;;
+            *)
+                echo "$PROG: warning: unknown type '$t', skipping" >&2
+                continue
+                ;;
+        esac
+
+        srcdir="$extract_dir/$t"
+        if [ ! -d "$srcdir" ]; then
+            echo "$PROG: warning: expected folder '$t/' not found in archive" >&2
+            continue
+        fi
+
+        mkdir -p "$target"
+        for f in "$srcdir"/*; do
+            [ -e "$f" ] || continue
+            fname=$(basename "$f")
+            cp -v "$f" "$target/$fname"
+            chmod "$perms" "$target/$fname" 2>/dev/null || true
+            echo "$target/$fname" >> "$manifest"
+            installed_count=$((installed_count + 1))
+        done
+    done
+
+    if [ "$installed_count" -eq 0 ]; then
+        echo "$PROG: error: no files were installed for '$pkg' (archive layout mismatch?)" >&2
+        rm -rf "$extract_dir" "$archive" "$manifest"
+        exit 1
+    fi
+
+    echo "$pkg $(pkg_field "$pkg" "package_version")" > "$STATE_DIR/$pkg.installed"
+    rm -rf "$extract_dir" "$archive"
+
+    echo "$PROG: $pkg installed successfully ($installed_count file(s))"
+}
+
+cmd_remove() {
+    pkg="$1"
+    manifest="$STATE_DIR/$pkg.manifest"
+
+    if [ ! -f "$STATE_DIR/$pkg.installed" ]; then
+        echo "$PROG: $pkg is not installed"
+        exit 1
+    fi
+
+    if [ -f "$manifest" ]; then
+        echo "$PROG: removing files for $pkg..."
+        while IFS= read -r f; do
+            rm -fv "$f"
+        done < "$manifest"
+        rm -f "$manifest"
+    fi
+
+    rm -f "$STATE_DIR/$pkg.installed"
+    echo "$PROG: $pkg removed"
+}
+
+cmd_update_index() {
+    fetch_index
+    echo "$PROG: index updated"
+}
+
+# --- main ---
 
 if [ "$#" -lt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     usage
     exit 0
 fi
 
+require_tools
+
+if [ "$1" = "all" ] && [ "$2" = "update" ]; then
+    cmd_update_index
+    exit 0
+fi
+
 if [ "$#" -lt 2 ]; then
-    echo "$PROG: error: missing action for package '$1'" >&2
+    echo "$PROG: error: missing action for '$1'" >&2
     usage
     exit 1
 fi
@@ -49,30 +224,10 @@ fi
 PACKAGE="$1"
 ACTION="$2"
 
-require_xbps
-
 case "$ACTION" in
-    install)
-        echo "$PROG: installing $PACKAGE..."
-        sudo xbps-install -Sy "$PACKAGE"
-        ;;
-    remove)
-        echo "$PROG: removing $PACKAGE..."
-        sudo xbps-remove -y "$PACKAGE"
-        ;;
-    search)
-        echo "$PROG: searching for $PACKAGE..."
-        xbps-query -Rs "$PACKAGE"
-        ;;
-    update)
-        if [ "$PACKAGE" = "all" ]; then
-            echo "$PROG: updating all packages..."
-            sudo xbps-install -Suy
-        else
-            echo "$PROG: updating $PACKAGE..."
-            sudo xbps-install -Suy "$PACKAGE"
-        fi
-        ;;
+    install) cmd_install "$PACKAGE" ;;
+    remove)  cmd_remove "$PACKAGE" ;;
+    search)  cmd_search "$PACKAGE" ;;
     *)
         echo "$PROG: error: unknown action '$ACTION'" >&2
         usage
