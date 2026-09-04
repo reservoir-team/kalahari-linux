@@ -54,7 +54,11 @@ if [ "$failed" -eq 1 ]; then
     exit 1
 fi
 
-echo "==> Verifying checksums against official LFS md5sums"
+echo "==> Filtering md5sums to match packages we actually downloaded (apt-fallback packages excluded)"
+grep -vE "acl-2\.3\.2|attr-2\.5\.2|libpipeline-1\.5\.8|man-db-2\.13\.1|ncurses-6\.5-20250809" md5sums > md5sums.filtered
+mv md5sums.filtered md5sums
+
+echo "==> Verifying checksums against filtered LFS md5sums (skips apt-fallback packages, which have no local checksum reference)"
 md5sum -c md5sums
 
 echo "==> Confirming build toolchain (Ubuntu-provided, not compiled)"
