@@ -50,7 +50,7 @@ cd "$LFS/sources"
 
 echo "==> Iana-Etc"
 tar -xf iana-etc-*.tar.gz && cd iana-etc-*/
-cp services protocols /etc
+cp services protocols "$LFS/etc"
 cd "$LFS/sources"
 
 echo "==> Glibc (final)"
@@ -217,7 +217,7 @@ touch "$LFS/usr/bin/passwd"
 make
 make DESTDIR="$LFS" exec_prefix=/usr install
 make -C man DESTDIR="$LFS" install-man
-mkdir -p /etc/default
+mkdir -p "$LFS/etc/default"
 sed -i '/MAIL_CHECK_ENAB/{s/yes/no/}' "$LFS/etc/login.defs"
 cd "$LFS/sources"
 
