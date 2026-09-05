@@ -160,7 +160,7 @@ mkdir -v build && cd build
     --enable-gold \
     --enable-ld=default \
     --enable-plugins \
-    --enable-shared \
+    --disable-shared \
     --disable-werror \
     --enable-64-bit-bfd \
     --with-system-zlib
