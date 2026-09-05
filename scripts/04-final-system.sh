@@ -45,7 +45,7 @@ cd "$LFS/sources"
 echo "==> Man-pages"
 tar -xf man-pages-*.tar.xz && cd man-pages-*/
 rm -v man3/crypt*
-make DESTDIR="$LFS" prefix=/usr install
+make -R MAKEFLAGS= prefix=/usr DESTDIR="$LFS" install
 cd "$LFS/sources"
 
 echo "==> Iana-Etc"
