@@ -18,8 +18,23 @@ jobs:
       - name: Build cross toolchain
         run: bash scripts/01-toolchain.sh
 
-      - name: Enter chroot & build final system, dinit, kernel, kpk, branding
-        run: sudo bash scripts/03-chroot-enter.sh
+      - name: Create rootfs skeleton
+        run: bash scripts/03-chroot-enter.sh
+
+      - name: Build final system
+        run: sudo bash scripts/04-final-system.sh
+
+      - name: Build and integrate dinit
+        run: sudo bash scripts/05-dinit.sh
+
+      - name: Build kernel
+        run: sudo bash scripts/06-kernel.sh
+
+      - name: Integrate kpk
+        run: sudo bash scripts/07-kpk-integrate.sh
+
+      - name: Apply branding
+        run: sudo bash scripts/08-branding.sh
 
       - name: Build ISO image
         run: sudo bash scripts/09-image.sh

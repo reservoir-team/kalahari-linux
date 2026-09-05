@@ -1,14 +1,16 @@
 #!/bin/sh
 # 06-kernel.sh
-# Builds Linux kernel 7.3 with EFISTUB enabled.
-# EEVDF is the default scheduler since 6.6+, no special config needed,
-# but we verify it's active in the resulting .config.
+# Builds Linux kernel 7.3 with EFISTUB enabled, installs modules and
+# kernel image into $LFS staging rootfs.
 
 set -e
 
+LFS="$HOME/lfs"
+export LFS
+
 LINUX_VER="7.3"
 
-cd /sources
+cd "$LFS/sources"
 tar -xf "linux-${LINUX_VER}.tar.xz"
 cd "linux-${LINUX_VER}"
 
@@ -32,11 +34,11 @@ echo "==> Building kernel"
 make -j"$(nproc)"
 
 echo "==> Installing modules"
-make modules_install
+make INSTALL_MOD_PATH="$LFS" modules_install
 
 echo "==> Copying kernel image (EFI executable)"
-mkdir -pv /boot/EFI/BOOT
-cp -v arch/x86/boot/bzImage /boot/EFI/BOOT/BOOTX64.EFI
+mkdir -pv "$LFS/boot/EFI/BOOT"
+cp -v arch/x86/boot/bzImage "$LFS/boot/EFI/BOOT/BOOTX64.EFI"
 
 echo "==> Kernel build complete"
 echo "==> NOTE: verify EEVDF is active after boot with: cat /proc/sys/kernel/sched_base_slice_us"

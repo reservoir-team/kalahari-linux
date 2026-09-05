@@ -4,17 +4,17 @@
 # Must run AFTER entering chroot with /dev, /proc, /sys, /run mounted.
 
 set -e
-export PATH="/usr/bin:/usr/sbin"
+export LFS="$HOME/lfs"
 export LC_ALL=POSIX
 export MAKEFLAGS="-j$(nproc)"
 
-cd /sources
+cd "$LFS/sources"
 
 echo "==> M4"
 tar -xf m4-*.tar.xz && cd m4-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Ncurses"
@@ -24,14 +24,14 @@ tar -xf ncurses-*.tar.gz && cd ncurses-*/
     --with-shared --without-normal --with-cxx-shared \
     --without-debug --without-ada --disable-stripping
 make
-make TIC_PATH="$(pwd)/progs/tic" install
+make TIC_PATH="$(pwd)/progs/tic" DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Bash"
 tar -xf bash-*.tar.gz && cd bash-*/
 ./configure --prefix=/usr --without-bash-malloc
 make
-make install
+make DESTDIR="$LFS" install
 ln -sv bash /bin/sh
 cd /sources
 
@@ -39,13 +39,13 @@ echo "==> Coreutils"
 tar -xf coreutils-*.tar.xz && cd coreutils-*/
 ./configure --prefix=/usr --enable-install-program=hostname --enable-no-install-program=kill,uptime
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Man-pages"
 tar -xf man-pages-*.tar.xz && cd man-pages-*/
 rm -v man3/crypt*
-make prefix=/usr install
+make DESTDIR="$LFS" prefix=/usr install
 cd /sources
 
 echo "==> Iana-Etc"
@@ -68,7 +68,7 @@ make
 make check || true
 touch /etc/ld.so.conf
 sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
-make install
+make DESTDIR="$LFS" install
 sed '/RTLDLIST=/s@/usr@@g' -i /usr/bin/ldd
 echo 'hosts: files dns' > /etc/nsswitch.conf
 cd /sources
@@ -77,7 +77,7 @@ echo "==> Zlib"
 tar -xf zlib-*.tar.gz && cd zlib-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 rm -fv /usr/lib/libz.a
 cd /sources
 
@@ -89,7 +89,7 @@ sed -i 's@(PREFIX)/man@(PREFIX)/share/man@g' Makefile
 make -f Makefile-libbz2_so
 make clean
 make
-make PREFIX=/usr install
+make DESTDIR="$LFS" PREFIX=/usr install
 cp -av libbz2.so.* /usr/lib
 ln -sv libbz2.so.1.0.8 /usr/lib/libbz2.so
 cp -v bzip2-shared /usr/bin/bzip2
@@ -101,13 +101,13 @@ echo "==> Xz"
 tar -xf xz-*.tar.xz && cd xz-*/
 ./configure --prefix=/usr --disable-static --docdir=/usr/share/doc/xz
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Zstd"
 tar -xf zstd-*.tar.gz && cd zstd-*/
 make prefix=/usr
-make prefix=/usr install
+make DESTDIR="$LFS" prefix=/usr install
 rm -v /usr/lib/libzstd.a
 cd /sources
 
@@ -117,7 +117,7 @@ echo "==> File"
 tar -xf file-*.tar.gz && cd file-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Readline"
@@ -126,29 +126,29 @@ sed -i '/MV.*old/d' Makefile.in
 sed -i '/{OLDSUFF}/c:' support/shlib-install
 ./configure --prefix=/usr --disable-static --with-curses --docdir=/usr/share/doc/readline
 make SHLIB_LIBS="-lncursesw"
-make SHLIB_LIBS="-lncursesw" install
-install -v -m644 doc/*.3 /usr/share/man/man3
+make SHLIB_LIBS="-lncursesw" DESTDIR="$LFS" install
+install -v -m644 doc/*.3 "$LFS/usr/share/man/man3"
 cd /sources
 
 echo "==> M4"
 tar -xf m4-*.tar.xz && cd m4-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Bc"
 tar -xf bc-*.tar.xz && cd bc-*/
 CC=gcc ./configure --prefix=/usr -G -O3 -r
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Flex"
 tar -xf flex-*.tar.gz && cd flex-*/
 ./configure --prefix=/usr --docdir=/usr/share/doc/flex --disable-static
 make
-make install
+make DESTDIR="$LFS" install
 ln -sv flex /usr/bin/lex
 cd /sources
 
@@ -165,7 +165,7 @@ mkdir -v build && cd build
     --enable-64-bit-bfd \
     --with-system-zlib
 make tooldir=/usr
-make tooldir=/usr install
+make DESTDIR="$LFS" tooldir=/usr install
 rm -fv /usr/lib/lib{bfd,ctf,ctf-nobfd,gprofng,opcodes,sframe}.a
 cd /sources
 
@@ -173,21 +173,21 @@ echo "==> GMP"
 tar -xf gmp-*.tar.xz && cd gmp-*/
 ./configure --prefix=/usr --enable-cxx --disable-static --docdir=/usr/share/doc/gmp
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> MPFR"
 tar -xf mpfr-*.tar.xz && cd mpfr-*/
 ./configure --prefix=/usr --disable-static --enable-thread-safe --docdir=/usr/share/doc/mpfr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> MPC"
 tar -xf mpc-*.tar.gz && cd mpc-*/
 ./configure --prefix=/usr --disable-static --docdir=/usr/share/doc/mpc
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Part 2 (File through MPC) complete"
@@ -204,7 +204,7 @@ echo "==> Libcap"
 tar -xf libcap-*.tar.xz && cd libcap-*/
 sed -i '/install -m.*STA/d' libcap/Makefile
 make prefix=/usr lib=lib
-make prefix=/usr lib=lib install
+make DESTDIR="$LFS" prefix=/usr lib=lib install
 cd /sources
 
 echo "==> Shadow"
@@ -215,12 +215,9 @@ sed -i -e 's:#USE_PAM.*:USE_PAM yes:' etc/login.defs
 touch /usr/bin/passwd
 ./configure --sysconfdir=/etc --disable-static --with-{b,y}crypt --without-libbsd --with-group-name-max-length=32
 make
-make exec_prefix=/usr install
-make -C man install-man
-pwconv
-grpconv
+make DESTDIR="$LFS" exec_prefix=/usr install
+make -C man DESTDIR="$LFS" install-man
 mkdir -p /etc/default
-useradd -D --gid 999 2>/dev/null || true
 sed -i '/MAIL_CHECK_ENAB/{s/yes/no/}' /etc/login.defs
 cd /sources
 
@@ -238,7 +235,7 @@ mkdir -v build && cd build
     --disable-fixincludes \
     --with-system-zlib
 make
-make install
+make DESTDIR="$LFS" install
 ln -sfv gcc /usr/bin/cc
 cd /sources
 
@@ -246,7 +243,7 @@ echo "==> Pkg-config"
 tar -xf pkg-config-*.tar.gz && cd pkg-config-*/
 ./configure --prefix=/usr --with-internal-glib --disable-host-tool --docdir=/usr/share/doc/pkg-config
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Ncurses (final, with widechar already built earlier if needed)"
@@ -255,7 +252,7 @@ tar -xf ncurses-*.tar.gz && cd ncurses-*/
     --with-shared --without-debug --without-normal --with-cxx-shared \
     --enable-pc-files --with-pkg-config-libdir=/usr/lib/pkgconfig
 make
-make install
+make DESTDIR="$LFS" install
 for lib in ncurses form panel menu ; do
     rm -vf /usr/lib/lib${lib}.a
     ln -sfv lib${lib}w.so /usr/lib/lib${lib}.so
@@ -269,28 +266,28 @@ echo "==> Sed"
 tar -xf sed-*.tar.xz && cd sed-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Psmisc"
 tar -xf psmisc-*.tar.xz && cd psmisc-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Gettext"
 tar -xf gettext-*.tar.xz && cd gettext-*/
 ./configure --prefix=/usr --disable-static --docdir=/usr/share/doc/gettext
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Bison"
 tar -xf bison-*.tar.xz && cd bison-*/
 ./configure --prefix=/usr --docdir=/usr/share/doc/bison
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Part 3 (Attr through Bison) complete"
@@ -299,21 +296,21 @@ echo "==> Grep"
 tar -xf grep-*.tar.xz && cd grep-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Bash (final)"
 tar -xf bash-*.tar.gz && cd bash-*/
 ./configure --prefix=/usr --without-bash-malloc --with-installed-readline
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Libtool"
 tar -xf libtool-*.tar.xz && cd libtool-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 rm -fv /usr/lib/libltdl.a
 cd /sources
 
@@ -321,21 +318,21 @@ echo "==> GDBM"
 tar -xf gdbm-*.tar.gz && cd gdbm-*/
 ./configure --prefix=/usr --disable-static --enable-libgdbm-compat
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Gperf"
 tar -xf gperf-*.tar.gz && cd gperf-*/
 ./configure --prefix=/usr --docdir=/usr/share/doc/gperf
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Expat"
 tar -xf expat-*.tar.xz && cd expat-*/
 ./configure --prefix=/usr --disable-static --docdir=/usr/share/doc/expat
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Inetutils"
@@ -344,14 +341,14 @@ tar -xf inetutils-*.tar.xz && cd inetutils-*/
     --disable-whois --disable-rcp --disable-rexec --disable-rlogin \
     --disable-rsh --disable-servers
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Less"
 tar -xf less-*.tar.gz && cd less-*/
 ./configure --prefix=/usr --sysconfdir=/etc
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Perl"
@@ -369,28 +366,28 @@ sh Configure -des -Dprefix=/usr -Dvendorprefix=/usr \
     -Duseshrplib \
     -Dusethreads
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Autoconf"
 tar -xf autoconf-*.tar.xz && cd autoconf-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Automake"
 tar -xf automake-*.tar.xz && cd automake-*/
 ./configure --prefix=/usr --docdir=/usr/share/doc/automake
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> OpenSSL"
 tar -xf openssl-*.tar.gz && cd openssl-*/
 ./config --prefix=/usr --openssldir=/etc/ssl --libdir=lib shared zlib-dynamic
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Part 4 (Grep through OpenSSL) complete"
@@ -399,7 +396,7 @@ echo "==> Kmod"
 tar -xf kmod-*.tar.xz && cd kmod-*/
 ./configure --prefix=/usr --sysconfdir=/etc --with-openssl --with-xz --with-zstd --disable-manpages
 make
-make install
+make DESTDIR="$LFS" install
 for target in depmod insmod modinfo modprobe rmmod; do
     ln -sfv ../bin/kmod /usr/sbin/$target
 done
@@ -409,8 +406,9 @@ echo "==> Elfutils"
 tar -xf elfutils-*.tar.bz2 && cd elfutils-*/
 ./configure --prefix=/usr --disable-debuginfod --enable-libdebuginfod=dummy
 make
-make -C libelf install
-install -vm644 config/libelf.pc /usr/lib/pkgconfig
+make -C libelf DESTDIR="$LFS" install
+mkdir -pv "$LFS/usr/lib/pkgconfig"
+install -vm644 config/libelf.pc "$LFS/usr/lib/pkgconfig"
 rm -v /usr/lib/libelf.a
 cd /sources
 
@@ -418,7 +416,7 @@ echo "==> Libffi"
 tar -xf libffi-*.tar.gz && cd libffi-*/
 ./configure --prefix=/usr --disable-static --with-gcc-arch=native
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Python3"
@@ -426,14 +424,14 @@ tar -xf Python-*.tar.xz && cd Python-*/
 ./configure --prefix=/usr --enable-shared --with-system-expat \
     --enable-optimizations
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Coreutils (final)"
 tar -xf coreutils-*.tar.xz && cd coreutils-*/
 ./configure --prefix=/usr --enable-no-install-program=kill,uptime
 make
-make install
+make DESTDIR="$LFS" install
 mv -v /usr/bin/chroot /usr/sbin
 mv -v /usr/share/man/man1/chroot.1 /usr/share/man/man8/chroot.8
 sed -i 's/"1"/"8"/' /usr/share/man/man8/chroot.8
@@ -443,7 +441,7 @@ echo "==> Diffutils"
 tar -xf diffutils-*.tar.xz && cd diffutils-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Gawk"
@@ -451,21 +449,21 @@ tar -xf gawk-*.tar.xz && cd gawk-*/
 sed -i 's/extras//' Makefile.in
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Findutils"
 tar -xf findutils-*.tar.xz && cd findutils-*/
 ./configure --prefix=/usr --localstatedir=/var/lib/locate
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Groff"
 tar -xf groff-*.tar.gz && cd groff-*/
 PAGE=A4 ./configure --prefix=/usr
 make -j1
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Part 5 (Kmod through Groff) complete"
@@ -474,7 +472,7 @@ echo "==> Gzip"
 tar -xf gzip-*.tar.xz && cd gzip-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> IPRoute2"
@@ -482,7 +480,7 @@ tar -xf iproute2-*.tar.xz && cd iproute2-*/
 sed -i /ARPD/d Makefile
 rm -fv man/man8/arpd.8
 make NETNS_RUN_DIR=/run/netns
-make SBINDIR=/usr/sbin install
+make DESTDIR="$LFS" SBINDIR=/usr/sbin install
 cd /sources
 
 echo "==> Kbd"
@@ -491,7 +489,7 @@ sed -i '/RESIZECONS_PROGS=/s/yes/no/' configure
 sed -i 's/resizecons.8 //' docs/man/man8/Makefile.in
 ./configure --prefix=/usr --disable-vlock
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Libpipeline + Man-db (installed via apt on host, copied into chroot rootfs — savannah unreachable from CI)"
@@ -505,28 +503,28 @@ echo "==> Make"
 tar -xf make-*.tar.gz && cd make-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Patch"
 tar -xf patch-*.tar.xz && cd patch-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Tar"
 tar -xf tar-*.tar.xz && cd tar-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Texinfo"
 tar -xf texinfo-*.tar.xz && cd texinfo-*/
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Vim"
@@ -534,7 +532,7 @@ tar -xf vim-*.tar.gz && cd vim-*/
 echo '#define SYS_VIMRC_FILE "/etc/vimrc"' >> src/feature.h
 ./configure --prefix=/usr
 make
-make install
+make DESTDIR="$LFS" install
 ln -sv vim /usr/bin/vi
 for L in /usr/share/man/{,*/}man1/vim.1; do
     ln -sv vim.1 $(dirname $L)/vi.1
@@ -557,14 +555,14 @@ echo "==> Oniguruma (jq dependency)"
 tar -xf onig-*.tar.gz && cd onig-*/
 ./configure --prefix=/usr --disable-static
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> jq"
 tar -xf jq-*.tar.gz && cd jq-*/
 ./configure --prefix=/usr --disable-static --disable-maintainer-mode
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> jq (kpk dependency) installed"
@@ -574,27 +572,27 @@ tar -xf dhcpcd-*.tar.xz && cd dhcpcd-*/
 ./configure --prefix=/usr --sysconfdir=/etc --libexecdir=/usr/lib/dhcpcd \
     --dbdir=/var/lib/dhcpcd --rundir=/run
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Iwd (requires ell library first)"
 tar -xf ell-*.tar.gz && cd ell-*/
 ./configure --prefix=/usr --disable-static
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 tar -xf iwd-*.tar.xz && cd iwd-*/
 ./configure --prefix=/usr --libexecdir=/usr/lib --localstatedir=/var \
     --enable-external-ell=no
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Networking tools (iwd + dhcpcd) installed"
 
 make
-make install
+make DESTDIR="$LFS" install
 cd /sources
 
 echo "==> Final system (Chapter 8) build complete"
