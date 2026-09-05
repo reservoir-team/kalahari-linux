@@ -18,9 +18,6 @@ jobs:
       - name: Build cross toolchain
         run: bash scripts/01-toolchain.sh
 
-      - name: Build temporary system
-        run: bash scripts/02-tempsystem.sh
-
       - name: Enter chroot & build final system, dinit, kernel, kpk, branding
         run: sudo bash scripts/03-chroot-enter.sh
 

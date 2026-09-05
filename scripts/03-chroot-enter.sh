@@ -8,6 +8,22 @@ set -e
 
 LFS="$HOME/lfs"
 
+echo "==> Creating minimal rootfs skeleton"
+mkdir -pv "$LFS"/{etc,var,usr,tmp,root,dev,proc,sys,run}
+mkdir -pv "$LFS"/usr/{bin,sbin,lib,lib64,include,share}
+mkdir -pv "$LFS"/usr/share/{man,doc,info}
+mkdir -pv "$LFS"/usr/share/man/man{1,2,3,4,5,6,7,8}
+for i in bin lib sbin; do
+    ln -sfv usr/$i "$LFS/$i"
+done
+case $(uname -m) in
+    x86_64) mkdir -pv "$LFS/lib64" ;;
+esac
+mkdir -pv "$LFS/etc/opt"
+mkdir -pv "$LFS/opt"
+install -dv -m 0750 "$LFS/root"
+install -dv -m 1777 "$LFS/tmp" "$LFS/var/tmp"
+
 echo "==> Mounting virtual kernel filesystems"
 mount -v --bind /dev "$LFS/dev"
 mount -v --bind /dev/pts "$LFS/dev/pts"

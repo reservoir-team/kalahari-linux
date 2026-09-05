@@ -10,6 +10,38 @@ export MAKEFLAGS="-j$(nproc)"
 
 cd /sources
 
+echo "==> M4"
+tar -xf m4-*.tar.xz && cd m4-*/
+./configure --prefix=/usr
+make
+make install
+cd /sources
+
+echo "==> Ncurses"
+tar -xf ncurses-*.tar.gz && cd ncurses-*/
+./configure --prefix=/usr \
+    --mandir=/usr/share/man --with-manpage-format=normal \
+    --with-shared --without-normal --with-cxx-shared \
+    --without-debug --without-ada --disable-stripping
+make
+make TIC_PATH="$(pwd)/progs/tic" install
+cd /sources
+
+echo "==> Bash"
+tar -xf bash-*.tar.gz && cd bash-*/
+./configure --prefix=/usr --without-bash-malloc
+make
+make install
+ln -sv bash /bin/sh
+cd /sources
+
+echo "==> Coreutils"
+tar -xf coreutils-*.tar.xz && cd coreutils-*/
+./configure --prefix=/usr --enable-install-program=hostname --enable-no-install-program=kill,uptime
+make
+make install
+cd /sources
+
 echo "==> Man-pages"
 tar -xf man-pages-*.tar.xz && cd man-pages-*/
 rm -v man3/crypt*
