@@ -29,6 +29,9 @@ sudo apt-get install -y \
     cpio \
     jq
 
+echo "==> Ensuring asm/*.h headers are findable at /usr/include/asm (glibc build needs this)"
+sudo ln -sf /usr/include/x86_64-linux-gnu/asm /usr/include/asm
+
 echo "==> Creating build directories"
 mkdir -p "$HOME/lfs/sources"
 mkdir -p "$HOME/lfs/tools"
