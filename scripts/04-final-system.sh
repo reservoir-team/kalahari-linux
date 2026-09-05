@@ -108,7 +108,7 @@ echo "==> Zstd"
 tar -xf zstd-*.tar.gz && cd zstd-*/
 make prefix=/usr
 make DESTDIR="$LFS" prefix=/usr install
-rm -v /usr/lib/libzstd.a
+rm -v "$LFS/usr/lib/libzstd.a"
 cd "$LFS/sources"
 
 echo "==> Part 1 (Man-pages through Zstd) complete"
@@ -166,7 +166,7 @@ mkdir -v build && cd build
     --with-system-zlib
 make tooldir=/usr
 make DESTDIR="$LFS" tooldir=/usr install
-rm -fv /usr/lib/lib{bfd,ctf,ctf-nobfd,gprofng,opcodes,sframe}.a
+rm -fv "$LFS"/usr/lib/lib{bfd,ctf,ctf-nobfd,gprofng,opcodes,sframe}.a
 cd "$LFS/sources"
 
 echo "==> GMP"
@@ -194,10 +194,10 @@ echo "==> Part 2 (File through MPC) complete"
 
 echo "==> Attr + Acl (installed via apt on host, copied into chroot rootfs — savannah unreachable from CI)"
 for lib in libattr.so* libacl.so*; do
-    find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu -name "$lib" 2>/dev/null -exec cp -av {} /usr/lib/ \;
+    find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu -name "$lib" 2>/dev/null -exec cp -av {} "$LFS/usr/lib/" \;
 done
 for bin in getfattr setfattr getfacl setfacl chacl; do
-    command -v "$bin" >/dev/null 2>&1 && cp -av "$(command -v "$bin")" /usr/bin/
+    command -v "$bin" >/dev/null 2>&1 && cp -av "$(command -v "$bin")" "$LFS/usr/bin/"
 done
 
 echo "==> Libcap"
@@ -236,7 +236,7 @@ mkdir -v build && cd build
     --with-system-zlib
 make
 make DESTDIR="$LFS" install
-ln -sfv gcc /usr/bin/cc
+ln -sfv gcc "$LFS/usr/bin/cc"
 cd "$LFS/sources"
 
 echo "==> Pkg-config"
@@ -254,12 +254,12 @@ tar -xf ncurses-*.tar.gz && cd ncurses-*/
 make
 make DESTDIR="$LFS" install
 for lib in ncurses form panel menu ; do
-    rm -vf /usr/lib/lib${lib}.a
-    ln -sfv lib${lib}w.so /usr/lib/lib${lib}.so
+    rm -vf "$LFS/usr/lib/lib${lib}.a"
+    ln -sfv lib${lib}w.so "$LFS/usr/lib/lib${lib}.so"
 done
-rm -vf /usr/lib/libcursesw.so
-ln -sfv libncursesw.so /usr/lib/libcursesw.so
-ln -sfv libncurses.so /usr/lib/libcurses.so
+rm -vf "$LFS/usr/lib/libcursesw.so"
+ln -sfv libncursesw.so "$LFS/usr/lib/libcursesw.so"
+ln -sfv libncurses.so "$LFS/usr/lib/libcurses.so"
 cd "$LFS/sources"
 
 echo "==> Sed"
@@ -398,7 +398,7 @@ tar -xf kmod-*.tar.xz && cd kmod-*/
 make
 make DESTDIR="$LFS" install
 for target in depmod insmod modinfo modprobe rmmod; do
-    ln -sfv ../bin/kmod /usr/sbin/$target
+    ln -sfv ../bin/kmod "$LFS/usr/sbin/$target"
 done
 cd "$LFS/sources"
 
@@ -409,7 +409,7 @@ make
 make -C libelf DESTDIR="$LFS" install
 mkdir -pv "$LFS/usr/lib/pkgconfig"
 install -vm644 config/libelf.pc "$LFS/usr/lib/pkgconfig"
-rm -v /usr/lib/libelf.a
+rm -v "$LFS/usr/lib/libelf.a"
 cd "$LFS/sources"
 
 echo "==> Libffi"
@@ -432,9 +432,9 @@ tar -xf coreutils-*.tar.xz && cd coreutils-*/
 ./configure --prefix=/usr --enable-no-install-program=kill,uptime
 make
 make DESTDIR="$LFS" install
-mv -v /usr/bin/chroot /usr/sbin
-mv -v /usr/share/man/man1/chroot.1 /usr/share/man/man8/chroot.8
-sed -i 's/"1"/"8"/' /usr/share/man/man8/chroot.8
+mv -v "$LFS/usr/bin/chroot" "$LFS/usr/sbin"
+mv -v "$LFS/usr/share/man/man1/chroot.1" "$LFS/usr/share/man/man8/chroot.8"
+sed -i 's/"1"/"8"/' "$LFS/usr/share/man/man8/chroot.8"
 cd "$LFS/sources"
 
 echo "==> Diffutils"
@@ -493,9 +493,9 @@ make DESTDIR="$LFS" install
 cd "$LFS/sources"
 
 echo "==> Libpipeline + Man-db (installed via apt on host, copied into chroot rootfs — savannah unreachable from CI)"
-find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu -name "libpipeline.so*" 2>/dev/null -exec cp -av {} /usr/lib/ \;
-command -v man >/dev/null 2>&1 && cp -av "$(command -v man)" /usr/bin/
-command -v mandb >/dev/null 2>&1 && cp -av "$(command -v mandb)" /usr/bin/
+find /usr/lib/x86_64-linux-gnu /lib/x86_64-linux-gnu -name "libpipeline.so*" 2>/dev/null -exec cp -av {} "$LFS/usr/lib/" \;
+command -v man >/dev/null 2>&1 && cp -av "$(command -v man)" "$LFS/usr/bin/"
+command -v mandb >/dev/null 2>&1 && cp -av "$(command -v mandb)" "$LFS/usr/bin/"
 mkdir -pv "$LFS/etc/man_db.conf.d"
 cp -av /etc/man_db.conf "$LFS/etc/man_db.conf" 2>/dev/null || true
 
