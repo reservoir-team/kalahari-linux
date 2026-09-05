@@ -89,11 +89,11 @@ sed -i 's@(PREFIX)/man@(PREFIX)/share/man@g' Makefile
 make -f Makefile-libbz2_so
 make clean
 make
-make DESTDIR="$LFS" PREFIX=/usr install
+make PREFIX="$LFS/usr" install
 cp -av libbz2.so.* "$LFS/usr/lib"
 ln -sv libbz2.so.1.0.8 "$LFS/usr/lib/libbz2.so"
-cp -v bzip2-shared /usr/bin/bzip2
-for i in /usr/bin/{bzcat,bunzip2}; do ln -sfv bzip2 $i; done
+cp -v bzip2-shared "$LFS/usr/bin/bzip2"
+for i in bzcat bunzip2; do ln -sfv bzip2 "$LFS/usr/bin/$i"; done
 rm -fv "$LFS/usr/lib/libbz2.a"
 cd "$LFS/sources"
 
