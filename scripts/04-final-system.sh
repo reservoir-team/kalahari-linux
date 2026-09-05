@@ -69,7 +69,7 @@ make check || true
 touch "$LFS/etc/ld.so.conf"
 sed '/test-installation/s@$(PERL)@echo not running@' -i ../Makefile
 make DESTDIR="$LFS" install
-sed '/RTLDLIST=/s@/usr@@g' -i /usr/bin/ldd
+sed '/RTLDLIST=/s@/usr@@g' -i "$LFS/usr/bin/ldd"
 echo 'hosts: files dns' > "$LFS/etc/nsswitch.conf"
 cd "$LFS/sources"
 
