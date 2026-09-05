@@ -11,6 +11,7 @@ sudo apt-get upgrade -y
 echo "==> Installing LFS build dependencies"
 sudo apt-get install -y \
     build-essential \
+    linux-libc-dev \
     bison \
     gawk \
     texinfo \
