@@ -178,14 +178,14 @@ cd "$LFS/sources"
 
 echo "==> MPFR"
 tar -xf mpfr-*.tar.xz && cd mpfr-*/
-./configure --prefix=/usr --disable-static --enable-thread-safe --docdir=/usr/share/doc/mpfr
+./configure --prefix=/usr --disable-static --enable-thread-safe --docdir=/usr/share/doc/mpfr --with-gmp="$LFS/usr"
 make
 make DESTDIR="$LFS" install
 cd "$LFS/sources"
 
 echo "==> MPC"
 tar -xf mpc-*.tar.gz && cd mpc-*/
-./configure --prefix=/usr --disable-static --docdir=/usr/share/doc/mpc
+./configure --prefix=/usr --disable-static --docdir=/usr/share/doc/mpc --with-gmp="$LFS/usr" --with-mpfr="$LFS/usr"
 make
 make DESTDIR="$LFS" install
 cd "$LFS/sources"
