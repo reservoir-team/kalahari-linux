@@ -7,7 +7,6 @@ set -e
 export LFS="$HOME/lfs"
 export LC_ALL=POSIX
 export MAKEFLAGS="-j$(nproc)"
-export LDFLAGS="-L$LFS/usr/lib -Wl,-rpath-link,$LFS/usr/lib ${LDFLAGS:-}"
 
 cd "$LFS/sources"
 
@@ -172,7 +171,7 @@ cd "$LFS/sources"
 
 echo "==> GMP"
 tar -xf gmp-*.tar.xz && cd gmp-*/
-./configure --prefix=/usr --enable-cxx --disable-static --docdir=/usr/share/doc/gmp
+./configure --prefix=/usr --disable-cxx --disable-static --docdir=/usr/share/doc/gmp
 make
 make DESTDIR="$LFS" install
 cd "$LFS/sources"
