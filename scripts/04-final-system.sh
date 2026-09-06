@@ -171,7 +171,7 @@ cd "$LFS/sources"
 
 echo "==> GMP"
 tar -xf gmp-*.tar.xz && cd gmp-*/
-./configure --prefix=/usr --disable-cxx --disable-static --docdir=/usr/share/doc/gmp
+./configure --prefix=/usr --disable-cxx --disable-static --docdir=/usr/share/doc/gmp --build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu
 make
 make DESTDIR="$LFS" install
 cd "$LFS/sources"
