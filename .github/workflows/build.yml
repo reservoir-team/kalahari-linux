@@ -24,6 +24,11 @@ jobs:
       - name: Build final system
         run: bash scripts/04-final-system.sh
 
+      - name: Dump config.log on failure (debug)
+        if: failure()
+        run: |
+          find "$HOME/lfs/sources" -name "config.log" -newer "$HOME/lfs/sources/wget-list" -exec sh -c 'echo "=== {} ==="; tail -50 "{}"' \;
+
       - name: Build and integrate dinit
         run: bash scripts/05-dinit.sh
 
