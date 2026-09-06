@@ -7,6 +7,8 @@ set -e
 export LFS="$HOME/lfs"
 export LC_ALL=POSIX
 export MAKEFLAGS="-j$(nproc)"
+export LD_LIBRARY_PATH="$LFS/usr/lib:${LD_LIBRARY_PATH:-}"
+export LDFLAGS="-L$LFS/usr/lib -Wl,-rpath-link,$LFS/usr/lib ${LDFLAGS:-}"
 
 cd "$LFS/sources"
 
