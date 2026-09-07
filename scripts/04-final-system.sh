@@ -178,7 +178,7 @@ cd "$LFS/sources"
 
 echo "==> MPFR"
 tar -xf mpfr-*.tar.xz && cd mpfr-*/
-./configure --prefix=/usr --disable-static --enable-thread-safe --docdir=/usr/share/doc/mpfr --with-gmp="$LFS/usr"
+./configure --prefix=/usr --disable-static --enable-thread-safe --docdir=/usr/share/doc/mpfr --with-gmp="$LFS/usr" || { echo "=== MPFR config.log ==="; cat config.log; exit 1; }
 make
 make DESTDIR="$LFS" install
 cd "$LFS/sources"
